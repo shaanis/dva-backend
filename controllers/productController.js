@@ -70,54 +70,46 @@ exports.getAllProductController = async (req, res) => {
 
 // Edit product controller
 exports.EditProductController = async (req, res) => {
-  console.log("✏️ Inside EditProductController");
-
+  console.log("inside EditProductController");
+  
   try {
     const { id } = req.params;
-    const { name, price, colors, sizes, category } = req.body;
+    const { name, price, sizes, category, removedImages } = req.body;
 
-    // Log request body and files
-    console.log("📝 Body:", req.body);
-    console.log("🖼 Uploaded Files:", req.files);
-
-    // Collect Cloudinary image URLs if files are uploaded
     let images = [];
     if (req.files && req.files.length > 0) {
-      images = req.files.map((file) => file.path);
+      images = req.files.map(file => file.path); // cloudinary URLs
     }
 
-    // Ensure values are arrays
-    const parsedColors = Array.isArray(colors)
-      ? colors
-      : colors
-      ? [colors]
-      : [];
-    const parsedSizes = Array.isArray(sizes) ? sizes : sizes ? [sizes] : [];
+    const parsedSizes = Array.isArray(sizes) ? sizes : [sizes];
+    const parsedRemovedImages = Array.isArray(removedImages)
+      ? removedImages
+      : removedImages ? [removedImages] : [];
 
-    // Find the product
     const product = await products.findById(id);
-    if (!product) {
-      return res.status(404).json({ message: "Product not found" });
+    if (!product) return res.status(404).json({ message: "Product not found" });
+
+    // Remove deleted images from existing array
+    product.image = (product.image || []).filter(img => !parsedRemovedImages.includes(img));
+
+    // Add new uploaded images
+    if (images.length > 0) {
+      product.image.push(...images);
     }
 
-    // Update fields if provided
     if (name) product.name = name;
     if (price) product.price = price;
     if (category) product.category = category;
-    if (parsedColors.length > 0) product.colors = parsedColors;
     if (parsedSizes.length > 0) product.sizes = parsedSizes;
-    if (images.length > 0) product.image = images;
 
     await product.save();
-    return res.status(200).json(product);
+    res.status(200).json(product);
   } catch (error) {
-    console.error(" Error editing product:", error);
-    return res.status(500).json({
-      message: "Internal server error",
-      error: error.message,
-    });
+    console.error("Edit error:", error);
+    res.status(500).json({ message: "Internal server error", error: error.message });
   }
 };
+
 
 // Delete product controller
 exports.DeleteProductController = async (req, res) => {

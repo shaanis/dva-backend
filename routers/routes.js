@@ -10,10 +10,10 @@ const router = express.Router();
 router.post('/login', userController.loginAdminController);
 
 // Add product
-router.post('/addproduct',jwtMiddleware, multerMidleware.array('image', 5),  productController.AddProductController);
+router.post('/addproduct',jwtMiddleware, multerMidleware.array('image', 10),  productController.AddProductController);
 
 //  Edit product
-router.put('/editproduct/:id', jwtMiddleware, multerMidleware.array('image', 10), productController.EditProductController);
+router.put('/editproduct/:id', jwtMiddleware, multerMidleware.array('images', 10), productController.EditProductController);
 
 // Get all products
 router.get('/getallproducts', productController.getAllProductController);
